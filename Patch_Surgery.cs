@@ -15,25 +15,30 @@ namespace InstantSurgeryMod
         }
     }
 
-    [HarmonyPatch(typeof(Recipe_RemoveHediff), nameof(Recipe_RemoveHediff.ApplyOnPawn))]
-    public static class Patch_Recipe_RemoveHediff
+    // TARGET UPDATE: Patch the fundamental base execution worker directly
+    [HarmonyPatch(typeof(RecipeWorker), nameof(RecipeWorker.ApplyOnPawn))]
+    public static class Patch_RecipeWorker_ApplyOnPawn
     {
         [HarmonyPrefix]
-        public static bool Prefix(Recipe_RemoveHediff __instance, Pawn pawn, BodyPartRecord part, Pawn billDoer, List<Thing> ingredients, Bill bill)
+        public static bool Prefix(RecipeWorker __instance, Pawn pawn, BodyPartRecord part, Pawn billDoer, List<Thing> ingredients, Bill bill)
         {
-            // FIXED: Changed __instance.def.defName to __instance.recipe.defName
-            if (__instance.recipe.defName == "RES_RepairProlapse" || __instance.recipe.defName == "RES_RepairExtremeProlapse")
+            // Verify if the active instance recipe matches our targets
+            if (__instance.recipe != null && (__instance.recipe.defName == "RES_RepairProlapse" || __instance.recipe.defName == "RES_RepairExtremeProlapse"))
             {
+                // Isolate the hediff directly from the target rules
                 Hediff hediff = pawn.health.hediffSet.GetFirstHediffOfDef(__instance.recipe.removesHediff);
                 if (hediff != null)
                 {
+                    // Strip the target medical condition out instantly
                     pawn.health.RemoveHediff(hediff);
+                    
                     if (__instance.recipe.successfullyRemovedHediffMessage != null)
                     {
                         Messages.Message(string.Format(__instance.recipe.successfullyRemovedHediffMessage, billDoer.LabelShort, hediff.Label, pawn.LabelShort), pawn, MessageTypeDefOf.PositiveEvent, true);
                     }
                 }
-                // Completely skips the game's default surgery completion logic (eliminating failure checks and sedation)
+                
+                // Block the core game engine from ever stepping into default failure, resource consumption, or sedation states
                 return false; 
             }
             return true;
