@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>InstantSurgeryMod</AssemblyName>
+    <OutputType>Library</OutputType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pulls the exact RimWorld 1.7 game engine structure from the cloud -->
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.7.*-*" />
+    <!-- Pulls the Harmony patching library framework automatically -->
+    <PackageReference Include="Lib.Harmony" Version="2.3.*" />
+  </ItemGroup>
+</Project>
