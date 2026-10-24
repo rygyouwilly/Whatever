@@ -1,0 +1,24 @@
+name: Compile RimWorld 1.7 Assembly
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 10 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build Mod DLL
+      run: dotnet build -c Release
+
+    - name: Upload Compiled Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: InstantSurgeryMod-1.7
+        path: bin/Release/InstantSurgeryMod.dll
