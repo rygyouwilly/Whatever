@@ -4,31 +4,37 @@ using RimWorld;
 
 namespace InstantSurgeryMod
 {
-    // Inherits safely from Recipe_RemoveHediff so the bills menu registers it correctly
+    // Inherits from Recipe_RemoveHediff to ensure the surgery populates properly in the UI bills menu
     public class Recipe_SurgeryNoSedation : Recipe_RemoveHediff
     {
         public override void ApplyOnPawn(Pawn pawn, BodyPartRecord part, Pawn billDoer, List<Thing> ingredients, Bill bill)
         {
             if (pawn == null || recipe == null || recipe.removesHediff == null) return;
 
-            // 1. Instantly pinpoint the exact medical condition on the patient pawn
+            // 1. Instantly target and extract the base medical condition (the prolapse)
             Hediff hediff = pawn.health.hediffSet.GetFirstHediffOfDef(recipe.removesHediff);
             if (hediff != null)
             {
-                // 2. Safely extract it out of the pawn's active health tracker
                 pawn.health.RemoveHediff(hediff);
 
-                // 3. Throw the positive green notification log up on the UI
                 if (!recipe.successfullyRemovedHediffMessage.NullOrEmpty())
                 {
                     Messages.Message(string.Format(recipe.successfullyRemovedHediffMessage, billDoer.LabelShort, hediff.Label, pawn.LabelShort), pawn, MessageTypeDefOf.PositiveEvent, true);
                 }
             }
 
-            // CRITICAL ENGINE INTERCEPTION: 
-            // By completely leaving out "base.ApplyOnPawn(...)", we stop the execution trail right here.
-            // Because the code never returns to the native engine, the game never triggers the devirtualized 
-            // failure algorithms OR the hardcoded anesthesia routine. It forces a 100% clean success state.
+            // 2. INJECTION LINE: Scan the pawn's active health tracker for any hardcoded anesthesia hediffs
+            // HediffDefOf.Anesthetic references the base game's default sedation tracking definition
+            Hediff anestheticHediff = pawn.health.hediffSet.GetFirstHediffOfDef(HediffDefOf.Anesthetic);
+            if (anestheticHediff != null)
+            {
+                // Forcefully clear out the sedation data node instantly
+                pawn.health.RemoveHediff(anestheticHediff);
+            }
+
+            // CRITICAL ENGINE INTERCEPTION:
+            // Omitting base.ApplyOnPawn(...) stops the game engine from executing its default 
+            // failure algorithms, item use hooks, or subsequent anesthesia application routines.
         }
     }
 }
