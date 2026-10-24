@@ -10,7 +10,6 @@ namespace InstantSurgeryMod
     {
         static ModMain()
         {
-            // Initializes your custom patch sequence
             var harmony = new Harmony("com.user.instantsurgerymod");
             harmony.PatchAll();
         }
@@ -22,7 +21,8 @@ namespace InstantSurgeryMod
         [HarmonyPrefix]
         public static bool Prefix(Recipe_RemoveHediff __instance, Pawn pawn, BodyPartRecord part, Pawn billDoer, List<Thing> ingredients, Bill bill)
         {
-            if (__instance.def.defName == "RES_RepairProlapse" || __instance.def.defName == "RES_RepairExtremeProlapse")
+            // FIXED: Changed __instance.def.defName to __instance.recipe.defName
+            if (__instance.recipe.defName == "RES_RepairProlapse" || __instance.recipe.defName == "RES_RepairExtremeProlapse")
             {
                 Hediff hediff = pawn.health.hediffSet.GetFirstHediffOfDef(__instance.recipe.removesHediff);
                 if (hediff != null)
@@ -33,7 +33,7 @@ namespace InstantSurgeryMod
                         Messages.Message(string.Format(__instance.recipe.successfullyRemovedHediffMessage, billDoer.LabelShort, hediff.Label, pawn.LabelShort), pawn, MessageTypeDefOf.PositiveEvent, true);
                     }
                 }
-                // Skip the Waylith framework's native surgery routines entirely (no cost, no fail, no sedation)
+                // Completely skips the game's default surgery completion logic (eliminating failure checks and sedation)
                 return false; 
             }
             return true;
