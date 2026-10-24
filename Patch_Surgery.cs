@@ -4,29 +4,33 @@ using RimWorld;
 
 namespace InstantSurgeryMod
 {
-    // Inherits directly from RimWorld's core surgery architecture
-    public class Recipe_SurgeryNoSedation : Recipe_Surgery
+    // Inheriting from Recipe_RemoveHediff ensures the surgery displays in the UI bills menu
+    public class Recipe_SurgeryNoSedation : Recipe_RemoveHediff
     {
         public override void ApplyOnPawn(Pawn pawn, BodyPartRecord part, Pawn billDoer, List<Thing> ingredients, Bill bill)
         {
             if (pawn == null || recipe == null || recipe.removesHediff == null) return;
 
-            // Target and isolate the exact condition on the pawn
+            // Instantly extract the target condition from the pawn
             Hediff hediff = pawn.health.hediffSet.GetFirstHediffOfDef(recipe.removesHediff);
             if (hediff != null)
             {
-                // Remove the condition instantly
                 pawn.health.RemoveHediff(hediff);
 
-                // Send the standard success message directly to the event log
                 if (!recipe.successfullyRemovedHediffMessage.NullOrEmpty())
                 {
                     Messages.Message(string.Format(recipe.successfullyRemovedHediffMessage, billDoer.LabelShort, hediff.Label, pawn.LabelShort), pawn, MessageTypeDefOf.PositiveEvent, true);
                 }
             }
-            
-            // NOTE: We deliberately do not call base.ApplyOnPawn() here.
-            // This completely intercept the process and drops all failure risk and anesthesia routines.
+
+            // WE DO NOT CALL base.ApplyOnPawn here. 
+            // This completely blocks the parent "SurgeryFlesh" from applying anesthesia/sedation.
+        }
+
+        // Forcefully intercept and disable any chance of medical surgery failure
+        public override bool CheckSurgeryFail(Pawn surgeon, Pawn patient, List<Thing> ingredients, BodyPartRecord part, Bill bill)
+        {
+            return false; // 0% failure chance guaranteed
         }
     }
 }
